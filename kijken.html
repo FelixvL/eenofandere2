@@ -1,0 +1,44 @@
+
+<script>
+async function naardeDOM(streamstuk){
+	console.log(streamstuk)
+	document.getElementById("resultaat").innerHTML += JSON.parse(streamstuk.slice(6)).warning
+}
+const apiKey = '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'; // Vervang dit met je eigen API-sleutel
+const url = 'https://api.openai.com/v1/engines/text-davinci-003/completions'; // URL van de API
+
+const query = {
+  prompt: "Vertel me iets interessants over kunstmatige intelligentie.",
+  max_tokens: 900,
+  stream: true // Zet stream op true
+};
+
+fetch(url, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`
+  },
+  body: JSON.stringify(query)
+})
+.then(response => {
+  const reader = response.body.getReader();
+  return new ReadableStream({
+    async start(controller) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        controller.enqueue(value);
+        // Verwerk elk stukje data hier
+        //console.log(new TextDecoder().decode(value));
+	
+        naardeDOM(new TextDecoder().decode(value));
+      }
+      controller.close();
+      reader.releaseLock();
+    }
+  });
+})
+.catch(error => console.error('Er is een fout opgetreden:', error));
+</script>
+<div id=resultaat></div>
